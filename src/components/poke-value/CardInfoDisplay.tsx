@@ -46,7 +46,7 @@ export function CardInfoDisplay({
         <CardHeader>
           <CardTitle className="font-headline text-xl"
             children={
-              <span className="flex items-center justify-center">
+              <span className="flex items-center justify-between">
                 Card Details &amp; Value
                 <Button
                   variant="outline"
@@ -72,7 +72,7 @@ export function CardInfoDisplay({
       <CardHeader>
         <CardTitle className="font-headline text-xl"
           children={
-            <span className="flex items-center justify-center">
+            <span className="flex items-center justify-between">
               Card Details &amp; Value
               <Button
                 variant="outline"

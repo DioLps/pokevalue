@@ -49,9 +49,8 @@ export function CardInfoDisplay({
               <span className="flex items-center justify-between">
                 Card Details &amp; Value
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   onClick={handleScanAnother}
-                  className="mb-4"
                 >
                   <ArrowLeft className="mr-2 h-4 w-4" /> Scan Another Card
                 </Button>
@@ -75,9 +74,8 @@ export function CardInfoDisplay({
             <span className="flex items-center justify-between">
               Card Details &amp; Value
               <Button
-                variant="outline"
+                variant="ghost"
                 onClick={handleScanAnother}
-                className="mb-4"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" /> Scan Another Card
               </Button>

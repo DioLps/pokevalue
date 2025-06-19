@@ -28,8 +28,10 @@ export default function UploadPage() {
       return;
     }
     setIsScanning(true);
+    toast({ title: "Processing Card...", description: "Please wait, this may take a moment." });
+
     try {
-      const response = await fetch('/api/prepare-card-price', {
+      const response = await fetch('/api/scan-card', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -37,27 +39,26 @@ export default function UploadPage() {
         body: JSON.stringify({ imageDataUri: dataUri }),
       });
 
-      if (response.ok) {
-        const { submissionId } = await response.json();
-        if (submissionId) {
-          router.push(`/card-price?submissionId=${submissionId}`);
-        } else {
-          throw new Error('Submission ID not received from server.');
-        }
+      const responseData = await response.json();
+
+      if (response.ok && responseData.submissionId) {
+        router.push(`/card-price?submissionId=${responseData.submissionId}`);
       } else {
-        const errorData = await response.json().catch(() => ({ message: "Failed to prepare card for scanning. Please try again." }));
-        throw new Error(errorData.message || "Server error during card preparation.");
+        // Error already handled by API, or submissionId missing
+        const errorMessage = responseData.error || "Failed to start card scan. Please try again.";
+        throw new Error(errorMessage);
       }
     } catch (error) {
-      console.error("Error preparing card for scanning:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+      console.error("Error scanning card:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during scanning.";
       toast({
         variant: "destructive",
         title: "Scan Error",
         description: errorMessage,
       });
-      setIsScanning(false);
+      setIsScanning(false); // Ensure loading state is reset on error
     }
+    // setIsScanning(false) will be effectively handled by navigation or error toast reset above
   };
 
   return (

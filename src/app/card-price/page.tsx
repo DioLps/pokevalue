@@ -8,9 +8,16 @@ import { PokeballIcon } from '@/components/icons/PokeballIcon';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, AlertTriangle, Sparkles, ArrowLeft } from 'lucide-react';
-import { identifyPokemonCardAction, estimateCardValueAction, getSubmittedImageDataAction } from '../actions';
 import type { EstimateCardValueOutput } from '@/ai/flows/estimate-card-value';
 import { useToast } from "@/hooks/use-toast";
+import type { CardSubmissionRow } from '@/lib/db'; // Using the DB row type directly
+
+interface FetchedSubmissionData extends Omit<CardSubmissionRow, 'estimationsJson' | 'createdAt' | 'updatedAt'> {
+  estimations?: EstimateCardValueOutput | null;
+  createdAt?: string; // Make them optional as they might not be used directly in UI state
+  updatedAt?: string;
+}
+
 
 function CardPriceContent() {
   const router = useRouter();
@@ -18,116 +25,65 @@ function CardPriceContent() {
   const { toast } = useToast();
 
   const [submissionId, setSubmissionId] = useState<string | null>(null);
-  const [imageDataUri, setImageDataUri] = useState<string | null>(null);
-  const [cardName, setCardName] = useState<string | null>(null);
-  const [cardNumber, setCardNumber] = useState<string | null>(null);
-  const [deckIdLetter, setDeckIdLetter] = useState<string | null>(null);
-  const [illustratorName, setIllustratorName] = useState<string | null>(null);
-  const [estimations, setEstimations] = useState<EstimateCardValueOutput>([]);
-  
-  const [isLoadingInitialData, setIsLoadingInitialData] = useState(true);
-  const [isLoadingIdentification, setIsLoadingIdentification] = useState(false);
-  const [isLoadingValuation, setIsLoadingValuation] = useState(false);
+  const [submissionData, setSubmissionData] = useState<FetchedSubmissionData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const subIdFromParams = searchParams.get('submissionId');
     if (subIdFromParams) {
       setSubmissionId(subIdFromParams);
-      fetchInitialImageData(subIdFromParams);
+      fetchSubmissionData(subIdFromParams);
     } else {
       const noIdError = "No submission ID found. Please go back and upload an image.";
       setError(noIdError);
       toast({ variant: "destructive", title: "Error", description: noIdError });
-      setIsLoadingInitialData(false);
+      setIsLoading(false);
     }
   }, [searchParams]);
 
-  const fetchInitialImageData = async (subId: string) => {
+  const fetchSubmissionData = async (subId: string) => {
     setError(null);
-    setIsLoadingInitialData(true);
+    setIsLoading(true);
     try {
-      toast({ title: "Loading Card Image...", description: "Please wait while we retrieve your card image."});
-      const result = await getSubmittedImageDataAction(subId);
-      if (result.imageDataUri) {
-        setImageDataUri(result.imageDataUri);
-        processCardIdentificationAndValuation(result.imageDataUri);
+      toast({ title: "Loading Card Details...", description: "Please wait while we retrieve your card information." });
+      const response = await fetch(`/api/get-submission/${subId}`);
+      const data: FetchedSubmissionData & { error?: string } = await response.json();
+
+      if (response.ok && data && data.status) { // Check for data and status
+        setSubmissionData(data);
+        if (data.status === 'ERROR_IDENTIFICATION' || data.status === 'ERROR_VALUATION') {
+          const errorMessage = data.errorMessage || `An error occurred during ${data.status.toLowerCase().includes('identification') ? 'identification' : 'valuation'}.`;
+          setError(errorMessage);
+          toast({ variant: "destructive", title: "Processing Error", description: errorMessage });
+        } else if (data.status === 'COMPLETED') {
+           toast({ title: "Success!", description: "Card details and estimations loaded.", variant: "default" });
+        } else {
+          // Should ideally not happen if scan-card completes fully
+          setError("Card processing is not yet complete or in an unknown state.");
+           toast({ variant: "destructive", title: "Unexpected State", description: "Card processing is not yet complete." });
+        }
       } else {
-        // Directly handle the error from the action without re-throwing
-        const errorMessage = result.error || "Could not retrieve image data for this submission.";
-        console.warn("Error fetching initial image data (from action):", errorMessage);
+        const errorMessage = data.error || "Could not retrieve submission data.";
+        console.warn("Error fetching submission data:", errorMessage);
         setError(errorMessage);
         toast({ variant: "destructive", title: "Load Error", description: errorMessage });
       }
-    } catch (e) { // Catches other unexpected errors
-      const errorMessage = e instanceof Error ? e.message : "Failed to load image data.";
-      console.error("Error fetching initial image data (unexpected):", e);
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : "Failed to load submission data.";
+      console.error("Error fetching submission data (unexpected):", e);
       setError(errorMessage);
       toast({ variant: "destructive", title: "Load Error", description: errorMessage });
     } finally {
-      setIsLoadingInitialData(false);
+      setIsLoading(false);
     }
   };
   
-  const processCardIdentificationAndValuation = async (dataUri: string) => {
-    setError(null); 
-    setIsLoadingIdentification(true);
-    setCardName(null);
-    setCardNumber(null);
-    setDeckIdLetter(null);
-    setIllustratorName(null);
-    setEstimations([]);
-
-    try {
-      toast({ title: "Identifying Card...", description: "Please wait while we analyze your Pokemon card."});
-      const identificationResult = await identifyPokemonCardAction({ photoDataUri: dataUri });
-      setCardName(identificationResult.cardName);
-      setCardNumber(identificationResult.cardNumber);
-      setDeckIdLetter(identificationResult.deckIdLetter || null);
-      setIllustratorName(identificationResult.illustratorName || null);
-      setIsLoadingIdentification(false);
-
-      if (identificationResult.cardName && identificationResult.cardNumber) {
-        setIsLoadingValuation(true);
-        const displayCardIdentifier = `${identificationResult.cardName} #${identificationResult.cardNumber}${identificationResult.deckIdLetter ? identificationResult.deckIdLetter : ''}`;
-        toast({ title: "Estimating Value...", description: `Searching for ${displayCardIdentifier} value on multiple marketplaces.`});
-        try {
-          const valuationResult = await estimateCardValueAction({ 
-            cardName: identificationResult.cardName,
-            cardNumber: identificationResult.cardNumber,
-            deckIdLetter: identificationResult.deckIdLetter,
-            illustratorName: identificationResult.illustratorName,
-          });
-          setEstimations(valuationResult);
-          toast({ title: "Success!", description: "Card identified and value estimation process complete.", variant: "default" });
-        } catch (valuationError) {
-          const errorMessage = valuationError instanceof Error ? valuationError.message : "An unknown error occurred during valuation.";
-          console.error("Valuation error:", valuationError);
-          setError(`Failed to estimate card value: ${errorMessage}`);
-          toast({ variant: "destructive", title: "Valuation Error", description: `Could not estimate value for ${displayCardIdentifier}. ${errorMessage}` });
-        } finally {
-          setIsLoadingValuation(false);
-        }
-      } else {
-         toast({ variant: "destructive", title: "Identification Issue", description: "Could not retrieve full card details for valuation. Card name or number missing." });
-         if (!identificationResult.cardName) setError("AI failed to identify card name.");
-         if (!identificationResult.cardNumber) setError("AI failed to identify card number.");
-      }
-
-    } catch (identificationError) {
-      const errorMessage = identificationError instanceof Error ? identificationError.message : "An unknown error occurred during identification.";
-      console.error("Identification error:", identificationError);
-      setError(`Failed to identify Pokemon card: ${errorMessage}`);
-      toast({ variant: "destructive", title: "Identification Error", description: `Could not identify card. ${errorMessage}` });
-      setIsLoadingIdentification(false);
-    }
-  };
-  
-  if (isLoadingInitialData && !error) { // Only show main loader if no immediate error
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
         <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">Loading image data...</p>
+        <p className="text-muted-foreground">Loading card data...</p>
       </div>
     );
   }
@@ -141,7 +97,7 @@ function CardPriceContent() {
           <Sparkles className="h-10 w-10 text-accent" />
         </div>
         <p className="text-muted-foreground mt-2 text-lg">
-          {!error ? "Here are the details and estimated value of your card!" : "There was an issue loading your card."}
+          {!error && submissionData ? "Here are the details and estimated value of your card!" : "There was an issue loading your card."}
         </p>
       </header>
 
@@ -149,7 +105,8 @@ function CardPriceContent() {
          <Button variant="outline" onClick={() => router.push('/')} className="mb-4">
           <ArrowLeft className="mr-2 h-4 w-4" /> Scan Another Card
         </Button>
-        {error && (
+        
+        {error && !submissionData?.imageDataUri && ( // Show main error if no data at all
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Error</AlertTitle>
@@ -157,20 +114,27 @@ function CardPriceContent() {
           </Alert>
         )}
 
-        {/* Conditionally render CardInfoDisplay only if there's no critical initial load error */}
-        {/* Or if some data has been partially loaded despite a later error */}
-        {(!error || imageDataUri || cardName) && (
+        {submissionData && (
             <CardInfoDisplay
-              imageDataUri={imageDataUri}
-              cardName={cardName}
-              cardNumber={cardNumber}
-              deckIdLetter={deckIdLetter}
-              illustratorName={illustratorName}
-              estimations={estimations}
-              isLoadingIdentification={isLoadingIdentification || (isLoadingInitialData && !error) } 
-              isLoadingValuation={isLoadingValuation}
+              imageDataUri={submissionData.imageDataUri || null}
+              cardName={submissionData.cardName || null}
+              cardNumber={submissionData.cardNumber || null}
+              deckIdLetter={submissionData.deckIdLetter || null}
+              illustratorName={submissionData.illustratorName || null}
+              estimations={submissionData.estimations || []}
+              isLoadingIdentification={false} // Data is either loaded or errored by now
+              isLoadingValuation={false}    // Data is either loaded or errored by now
             />
         )}
+         {/* Display specific error from submission data if card was partially processed */}
+         {submissionData && (submissionData.status === 'ERROR_IDENTIFICATION' || submissionData.status === 'ERROR_VALUATION') && submissionData.errorMessage && (
+             <Alert variant="destructive" className="mt-4">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Processing Error</AlertTitle>
+                <AlertDescription>{submissionData.errorMessage}</AlertDescription>
+             </Alert>
+         )}
+
       </main>
       <footer className="mt-12 text-center text-sm text-muted-foreground">
         <p>&copy; {new Date().getFullYear()} PokeValue. Powered by AI.</p>
@@ -188,4 +152,3 @@ export default function CardPricePage() {
     </Suspense>
   );
 }
-

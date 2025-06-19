@@ -3,10 +3,9 @@
 import { useState } from "react";
 import { ImageUpload } from "@/components/poke-value/ImageUpload";
 import { PokeballIcon } from "@/components/icons/PokeballIcon";
-import { AlertTriangle, ArrowLeft, Loader2, Sparkles } from "lucide-react";
+import { AlertTriangle, Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CardInfoDisplay } from "@/components/poke-value/CardInfoDisplay";
-import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { EstimateCardValueOutput } from "@/ai/flows/estimate-card-value";
 import { IdentifyPokemonCardOutput } from "@/ai/flows/identify-pokemon-card";
@@ -140,15 +139,6 @@ export default function HomePage() {
       </header>
 
       <main className="w-full max-w-2xl space-y-6">
-        {view !== "upload" && (
-          <Button
-            variant="outline"
-            onClick={handleScanAnother}
-            className="mb-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" /> Scan Another Card
-          </Button>
-        )}
 
         {view === "upload" && (
           <ImageUpload
@@ -189,6 +179,7 @@ export default function HomePage() {
                 deckIdLetter={submissionData.deckIdLetter || null}
                 illustratorName={submissionData.illustratorName || null}
                 estimations={submissionData.valuationResult || []}
+                handleScanAnother={handleScanAnother}
               />
             )}
           </>

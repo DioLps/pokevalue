@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
+  ArrowLeft,
   DollarSign,
   ExternalLink,
   Hash,
@@ -19,6 +20,7 @@ interface CardInfoDisplayProps {
   deckIdLetter: string | null;
   illustratorName: string | null;
   estimations: EstimateCardValueOutput | null;
+  handleScanAnother: VoidFunction;
 }
 
 export function CardInfoDisplay({
@@ -28,6 +30,7 @@ export function CardInfoDisplay({
   deckIdLetter,
   illustratorName,
   estimations,
+  handleScanAnother,
 }: CardInfoDisplayProps) {
   const hasValidEstimations = estimations && estimations.length > 0 &&
     estimations.some(
@@ -41,9 +44,19 @@ export function CardInfoDisplay({
     return (
       <Card className="w-full shadow-lg mt-6">
         <CardHeader>
-          <CardTitle className="font-headline text-xl">
-            Card Details &amp; Value
-          </CardTitle>
+          <CardTitle className="font-headline text-xl"
+            children={
+              <span className="flex items-center justify-center">
+                Card Details &amp; Value
+                <Button
+                  variant="outline"
+                  onClick={handleScanAnother}
+                  className="mb-4"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" /> Scan Another Card
+                </Button>
+              </span>}
+          />
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground text-center py-4">
@@ -57,9 +70,19 @@ export function CardInfoDisplay({
   return (
     <Card className="w-full shadow-lg mt-6">
       <CardHeader>
-        <CardTitle className="font-headline text-xl">
-          Card Details &amp; Value
-        </CardTitle>
+        <CardTitle className="font-headline text-xl"
+          children={
+            <span className="flex items-center justify-center">
+              Card Details &amp; Value
+              <Button
+                variant="outline"
+                onClick={handleScanAnother}
+                className="mb-4"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" /> Scan Another Card
+              </Button>
+            </span>}
+        />
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid md:grid-cols-2 gap-6 items-start">
@@ -135,9 +158,9 @@ export function CardInfoDisplay({
                               {est.searchUrl && (
                                 <Button
                                   variant={(est.estimatedValue.toLowerCase() !==
-                                        "not found" &&
-                                      est.estimatedValue.toLowerCase() !==
-                                        "n/a")
+                                    "not found" &&
+                                    est.estimatedValue.toLowerCase() !==
+                                    "n/a")
                                     ? "default"
                                     : "outline"}
                                   size="sm"
@@ -146,9 +169,9 @@ export function CardInfoDisplay({
                                     window.open(est.searchUrl, "_blank")}
                                 >
                                   {(est.estimatedValue.toLowerCase() !==
-                                        "not found" &&
-                                      est.estimatedValue.toLowerCase() !==
-                                        "n/a")
+                                    "not found" &&
+                                    est.estimatedValue.toLowerCase() !==
+                                    "n/a")
                                     ? `See on ${est.marketplace}`
                                     : `Search on ${est.marketplace}`}
                                   <ExternalLink size={16} className="ml-2" />

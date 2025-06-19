@@ -9,74 +9,74 @@ body {
 
 @layer base {
   :root {
-    --background: 210 40% 98%;  /* #f8f9fa - Very light gray */
-    --foreground: 210 10% 23%;  /* #343a40 - Dark gray */
+    --background: 210 50% 96%; /* #edf0f5 */
+    --foreground: 210 12% 18%; /* #262a2e */
     --card: 0 0% 100%; /* White */
-    --card-foreground: 210 10% 23%; /* Dark gray */
+    --card-foreground: 210 12% 18%; /* Dark gray */
     --popover: 0 0% 100%; /* White */
-    --popover-foreground: 210 10% 23%; /* Dark gray */
-    --primary: 217 91% 60%;  /* #3b82f6 - Accessible blue */
+    --popover-foreground: 210 12% 18%; /* Dark gray */
+    --primary: 217 75% 45%;  /* #2053b0 - Further darkened blue for contrast */
     --primary-foreground: 0 0% 100%; /* White */
-    --secondary: 210 40% 94%; /* #e9ecef - Light gray */
-    --secondary-foreground: 210 10% 31%; /* #495057 - Slightly lighter dark gray */
-    --muted: 210 40% 94%; /* #e9ecef */
-    --muted-foreground: 210 7% 46%;   /* #6c757d - Medium gray */
-    --accent: 158 79% 43%;  /* #10b981 - Emerald green */
+    --secondary: 210 30% 90%; /* #dde4ea */
+    --secondary-foreground: 210 10% 25%; /* #3a4045 */
+    --muted: 210 30% 90%; /* #dde4ea */
+    --muted-foreground: 210 10% 45%;   /* #67707a */
+    --accent: 158 70% 40%;  /* #17a872 - Darker green */
     --accent-foreground: 0 0% 100%; /* White */
-    --destructive: 0 72% 51%;   /* #dc2626 - Standard red */
+    --destructive: 0 70% 50%;   /* #e52424 - Standard red */
     --destructive-foreground: 0 0% 100%; /* White */
-    --border: 210 20% 88%;   /* #dee2e6 - Light gray border */
-    --input: 210 20% 94%;    /* #e9ecef - Slightly off-white input background */
-    --ring: 217 91% 65%;     /* #60a5fa - Lighter blue for ring */
+    --border: 210 20% 85%;   /* #d0d7e0 */
+    --input: 210 25% 92%;    /* #e3e8ed */
+    --ring: 217 75% 55%;     /* #396dd1 - Lighter version of new primary */
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-    --sidebar-background: 210 30% 96%; /* #eff2f5 */
-    --sidebar-foreground: 210 10% 23%; /* #343a40 */
-    --sidebar-primary: 217 91% 60%; /* Main primary */
-    --sidebar-primary-foreground: 0 0% 100%; /* Main primary-foreground */
-    --sidebar-accent: 210 30% 90%; /* #dde4ea */
-    --sidebar-accent-foreground: 210 10% 23%; /* #343a40 */
-    --sidebar-border: 210 20% 85%; /* #d4dae0 */
-    --sidebar-ring: 217 91% 65%; /* Main ring */
+    --sidebar-background: 210 40% 95%; /* #e8eef3 */
+    --sidebar-foreground: 210 12% 20%; /* #2b3036 */
+    --sidebar-primary: 217 75% 45%; /* Matching new primary */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 35% 88%; /* #d8e0e8 */
+    --sidebar-accent-foreground: 210 12% 20%;
+    --sidebar-border: 210 20% 80%; /* #c6cfda */
+    --sidebar-ring: 217 75% 55%; /* Matching new ring */
   }
 
   .dark {
-    --background: 222 47% 11%;  /* #111827 - Very dark blue/gray */
-    --foreground: 210 40% 96%;  /* #f1f3f5 - Light gray */
-    --card: 222 47% 15%; /* #1f2937 - Darker card background */
-    --card-foreground: 210 40% 96%; /* Light gray */
-    --popover: 222 47% 15%; /* #1f2937 */
-    --popover-foreground: 210 40% 96%; /* Light gray */
-    --primary: 217 91% 65%;  /* #60a5fa - Lighter accessible blue */
-    --primary-foreground: 222 47% 11%; /* Dark text for contrast */
-    --secondary: 222 47% 18%; /* #2b384c - Dark gray */
-    --secondary-foreground: 210 40% 92%; /* #e4e7eb - Lighter gray */
-    --muted: 222 47% 18%; /* #2b384c */
-    --muted-foreground: 215 20% 65%;  /* #a1aab8 - Lighter medium gray */
-    --accent: 158 64% 57%;  /* #34d399 - Lighter Emerald green */
-    --accent-foreground: 222 47% 11%; /* Dark text for contrast */
-    --destructive: 0 63% 51%;   /* #ef4444 - Lighter red */
-    --destructive-foreground: 0 0% 100%; /* White */
-    --border: 222 47% 25%;   /* #374151 - Medium dark gray border */
-    --input: 222 47% 20%;    /* #2f3b52 - Dark input background */
-    --ring: 217 91% 70%;     /* #93c5fd - Even lighter blue for ring */
+    --background: 222 50% 9%;  /* #0c111c */
+    --foreground: 210 30% 90%;  /* #dbe1e8 */
+    --card: 222 45% 13%; /* #161d2b */
+    --card-foreground: 210 30% 90%;
+    --popover: 222 45% 13%;
+    --popover-foreground: 210 30% 90%;
+    --primary: 217 90% 75%;  /* #93b9fa - Lighter blue for contrast */
+    --primary-foreground: 220 15% 10%; /* #141821 - Darker text for contrast on lighter primary */
+    --secondary: 222 40% 16%; /* #202839 */
+    --secondary-foreground: 210 25% 85%; /* #ccd3db */
+    --muted: 222 40% 16%;
+    --muted-foreground: 215 20% 60%;  /* #8c96a8 */
+    --accent: 158 70% 55%;  /* #40c190 - Lighter green */
+    --accent-foreground: 220 15% 10%; /* Dark text for contrast */
+    --destructive: 0 70% 60%;   /* #f54242 - Lighter red */
+    --destructive-foreground: 0 0% 100%;
+    --border: 222 35% 22%;   /* #2c3547 */
+    --input: 222 40% 18%;    /* #242d3e */
+    --ring: 217 90% 75%;     /* #93b9fa - Matches new primary */
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --sidebar-background: 222 47% 13%; /* #1a202e */
-    --sidebar-foreground: 210 40% 94%; /* #e9ecef */
-    --sidebar-primary: 217 91% 65%; /* Main primary */
-    --sidebar-primary-foreground: 222 47% 11%; /* Main primary-foreground */
-    --sidebar-accent: 222 47% 20%; /* #2f3b52 */
-    --sidebar-accent-foreground: 210 40% 94%; /* #e9ecef */
-    --sidebar-border: 222 47% 22%; /* #333d51 */
-    --sidebar-ring: 217 91% 70%; /* Main ring */
+    --sidebar-background: 222 48% 11%; /* #101623 */
+    --sidebar-foreground: 210 30% 88%; /* #d7dee6 */
+    --sidebar-primary: 217 90% 75%; /* Matching new primary */
+    --sidebar-primary-foreground: 220 15% 10%;
+    --sidebar-accent: 222 40% 18%; /* #242d3e */
+    --sidebar-accent-foreground: 210 30% 88%;
+    --sidebar-border: 222 35% 20%; /* #273040 */
+    --sidebar-ring: 217 90% 75%; /* Matching new ring */
   }
 }
 

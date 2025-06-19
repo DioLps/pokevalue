@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -21,8 +22,8 @@ const IdentifyPokemonCardInputSchema = z.object({
 export type IdentifyPokemonCardInput = z.infer<typeof IdentifyPokemonCardInputSchema>;
 
 const IdentifyPokemonCardOutputSchema = z.object({
+  serialNumber: z.string().describe('The serial number of the identified Pokemon card, typically found at the bottom of the card.'),
   cardName: z.string().describe('The name of the identified Pokemon card.'),
-  description: z.string().describe('A detailed description of the Pokemon card.'),
 });
 export type IdentifyPokemonCardOutput = z.infer<typeof IdentifyPokemonCardOutputSchema>;
 
@@ -37,10 +38,7 @@ const prompt = ai.definePrompt({
   input: {schema: IdentifyPokemonCardInputSchema},
   output: {schema: IdentifyPokemonCardOutputSchema},
   prompt: `You are an expert Pokemon card identifier.
-
-You will use the photo to identify the card, and give a detailed description of the card.
-
-Use the following as the primary source of information about the card.
+On the following picture of a pokemon card, you should retrieve on the bottom left the series number and card name.
 
 Photo: {{media url=photoDataUri}}`,
 });

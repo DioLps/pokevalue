@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function PokeValuePage() {
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
   const [cardName, setCardName] = useState<string | null>(null);
-  const [cardDescription, setCardDescription] = useState<string | null>(null);
+  const [cardSerialNumber, setCardSerialNumber] = useState<string | null>(null);
   const [estimatedValue, setEstimatedValue] = useState<string | null>(null);
   const [marketplace, setMarketplace] = useState<string | null>(null);
   
@@ -30,7 +30,7 @@ export default function PokeValuePage() {
   const resetAllStates = () => {
     setImageDataUri(null);
     setCardName(null);
-    setCardDescription(null);
+    setCardSerialNumber(null);
     setEstimatedValue(null);
     setMarketplace(null);
     setIsLoadingIdentification(false);
@@ -48,7 +48,7 @@ export default function PokeValuePage() {
       toast({ title: "Identifying Card...", description: "Please wait while we analyze your Pokemon card."});
       const identificationResult = await identifyPokemonCardAction({ photoDataUri: dataUri });
       setCardName(identificationResult.cardName);
-      setCardDescription(identificationResult.description);
+      setCardSerialNumber(identificationResult.serialNumber); // Corrected to use serialNumber (lowercase 's')
       setIsLoadingIdentification(false);
 
       if (identificationResult.cardName) {
@@ -98,7 +98,7 @@ export default function PokeValuePage() {
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>{error}</AlertDescription> 
           </Alert>
         )}
 
@@ -112,7 +112,7 @@ export default function PokeValuePage() {
         <CardInfoDisplay
           imageDataUri={imageDataUri}
           cardName={cardName}
-          description={cardDescription}
+          serialNumber={cardSerialNumber} 
           estimatedValue={estimatedValue}
           marketplace={marketplace}
           isLoadingIdentification={isLoadingIdentification}

@@ -5,12 +5,12 @@ import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { DollarSign, Info, ShoppingCart, ExternalLink } from 'lucide-react';
+import { DollarSign, Info, ShoppingCart, ExternalLink, Hash } from 'lucide-react';
 
 interface CardInfoDisplayProps {
   imageDataUri: string | null;
   cardName: string | null;
-  description: string | null;
+  serialNumber: string | null; // Changed from description to serialNumber
   estimatedValue: string | null;
   marketplace: string | null;
   isLoadingIdentification: boolean;
@@ -20,7 +20,7 @@ interface CardInfoDisplayProps {
 export function CardInfoDisplay({
   imageDataUri,
   cardName,
-  description,
+  serialNumber, // Changed from description to serialNumber
   estimatedValue,
   marketplace,
   isLoadingIdentification,
@@ -71,17 +71,17 @@ export function CardInfoDisplay({
             <div className="space-y-4">
               <div>
                 <h3 className="text-lg font-semibold text-primary mb-1 font-headline">
-                  {isLoadingIdentification ? <Skeleton className="h-7 w-3/4" /> : cardName}
+                  {isLoadingIdentification ? <Skeleton className="h-7 w-3/4" /> : cardName || "Identifying..."}
                 </h3>
-                {isLoadingIdentification ? (
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-5/6" />
-                    <Skeleton className="h-4 w-4/6" />
+                {isLoadingIdentification && !serialNumber ? (
+                  <div className="space-y-2 mt-1">
+                    <Skeleton className="h-4 w-2/3" />
                   </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">{description}</p>
-                )}
+                ) : serialNumber ? (
+                  <p className="text-sm text-muted-foreground flex items-center">
+                    <Hash size={14} className="mr-1 text-muted-foreground/80" /> {serialNumber}
+                  </p>
+                ) : null}
               </div>
 
               {(isLoadingValuation || (estimatedValue && marketplace)) && (

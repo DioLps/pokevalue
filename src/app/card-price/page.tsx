@@ -133,7 +133,7 @@ function CardPriceContent() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 bg-gradient-to-br from-background to-blue-100 dark:from-background dark:to-slate-900">
+    <div className="min-h-screen flex flex-col items-center justify-start p-4 sm:p-6 md:p-8 bg-gradient-to-br from-background to-blue-100 dark:from-background dark:to-slate-900">
       <header className="mb-8 text-center">
         <div className="flex items-center justify-center space-x-3">
           <PokeballIcon className="h-12 w-12 text-primary animate-spin [animation-duration:5s]" />
@@ -188,3 +188,4 @@ export default function CardPricePage() {
     </Suspense>
   );
 }
+

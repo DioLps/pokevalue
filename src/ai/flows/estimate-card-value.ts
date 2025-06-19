@@ -38,27 +38,26 @@ const estimateCardValuePrompt = ai.definePrompt({
   name: 'estimateCardValuePrompt',
   input: {schema: EstimateCardValueInputSchema},
   output: {schema: EstimateCardValueOutputSchema},
-  prompt: `You are an expert appraiser of Pokemon cards.
+  prompt: `You are an expert appraiser of Pokémon cards.
 
-You will estimate the market value of the card by searching two online marketplaces: eBay and PriceCharting.com.
-Use the provided card details to construct effective search queries. Combine the card name, card number, and deck ID letter (if present) for accuracy. The illustrator name can also be used to refine searches if available and relevant (e.g., for special art versions or "Illustration Rares").
+Estimate the market value of the card by searching two online marketplaces: eBay and PriceCharting.com. Use the provided card details to build accurate search queries by combining the card name, card number, and deck ID letter (if provided). If an illustrator name is available and relevant (e.g., for illustration rares or special arts), include it as well.
 
 Card Details:
-- Card Name: {{{cardName}}}
-- Card Number: {{{cardNumber}}}
-{{#if deckIdLetter}}- Deck ID Letter: {{{deckIdLetter}}}{{/if}}
-{{#if illustratorName}}- Illustrator: {{{illustratorName}}}{{/if}}
 
-For each marketplace (eBay and PriceCharting):
-- Provide an estimated market value. If no listings are found or a value cannot be determined, state "Not found" or "N/A" for the estimatedValue.
-- Provide the marketplace name (must be exactly "eBay" or "PriceCharting").
-- Provide the direct search URL you used for that marketplace. The search query should incorporate the card name, card number, and deck ID letter (if present).
-  Example search query components: "{{{cardName}}} {{{cardNumber}}}{{{deckIdLetter}}}". If illustrator name is present and seems relevant (e.g. for a full art card), you can add it like "{{{cardName}}} {{{cardNumber}}}{{{deckIdLetter}}} illustrator {{{illustratorName}}}".
-  Example eBay URL: "https://www.ebay.com/sch/i.html?_nkw=Pikachu+025D"
-  Example PriceCharting URL: "https://www.pricecharting.com/search-products?q=Pikachu+025D&type=prices"
-  Ensure search query components are URL encoded in the searchUrl.
+  Card Name: {{{cardName}}}
+  Card Number: {{{cardNumber}}}
+  {{#if deckIdLetter}}- Deck ID Letter: {{{deckIdLetter}}}{{/if}}
+  {{#if illustratorName}}- Illustrator: {{{illustratorName}}}{{/if}}
 
-Return an array containing two estimation objects, one for eBay and one for PriceCharting.`,
+For each marketplace (eBay and PriceCharting), provide the following:
+
+  estimatedValue: Extract the most relevant price from current listings or historical pricing. Always include the currency symbol or code with the price (e.g., "$12.50", "£8.99", "EUR 15.00", "JPY 1800"). If no valid price is found, use "Not found" or "N/A".
+  marketplace: The exact name of the source — either "eBay" or "PriceCharting".
+  searchUrl: The exact search URL used, incorporating card name, number, and deck ID letter. Encode all parameters for URLs.
+  Example eBay URL: https://www.ebay.com/sch/i.html?_nkw=Pikachu+025D
+  Example PriceCharting URL: https://www.pricecharting.com/search-products?q=Pikachu+025D&type=prices
+
+Return a JSON array with two objects, one for each marketplace. Make sure that the price is clearly extractable even if listed in a non-USD currency. Do not convert currencies — preserve the original format for accurate human interpretation.`,
 });
 
 const estimateCardValueFlow = ai.defineFlow(

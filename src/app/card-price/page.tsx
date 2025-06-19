@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CardInfoDisplay } from '@/components/poke-value/CardInfoDisplay';
 import { PokeballIcon } from '@/components/icons/PokeballIcon';
@@ -24,7 +24,6 @@ function CardPriceContent() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
 
-  const [submissionId, setSubmissionId] = useState<string | null>(null);
   const [submissionData, setSubmissionData] = useState<FetchedSubmissionData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +31,6 @@ function CardPriceContent() {
   useEffect(() => {
     const subIdFromParams = searchParams.get('submissionId');
     if (subIdFromParams) {
-      setSubmissionId(subIdFromParams);
       fetchSubmissionData(subIdFromParams);
     } else {
       const noIdError = "No submission ID found. Please go back and upload an image.";
@@ -42,7 +40,7 @@ function CardPriceContent() {
     }
   }, [searchParams]);
 
-  const fetchSubmissionData = async (subId: string) => {
+   const fetchSubmissionData = useCallback(async (subId: string) => {
     setError(null);
     setIsLoading(true);
     try {
@@ -51,23 +49,23 @@ function CardPriceContent() {
       const data: FetchedSubmissionData & { error?: string } = await response.json();
 
       if (response.ok && data && data.status) { // Check for data and status
-        setSubmissionData(data);
-        if (data.status === 'ERROR_IDENTIFICATION' || data.status === 'ERROR_VALUATION') {
-          const errorMessage = data.errorMessage || `An error occurred during ${data.status.toLowerCase().includes('identification') ? 'identification' : 'valuation'}.`;
-          setError(errorMessage);
-          toast({ variant: "destructive", title: "Processing Error", description: errorMessage });
-        } else if (data.status === 'COMPLETED') {
-           toast({ title: "Success!", description: "Card details and estimations loaded.", variant: "default" });
-        } else {
-          // Should ideally not happen if scan-card completes fully
-          setError("Card processing is not yet complete or in an unknown state.");
-           toast({ variant: "destructive", title: "Unexpected State", description: "Card processing is not yet complete." });
-        }
-      } else {
-        const errorMessage = data.error || "Could not retrieve submission data.";
-        console.warn("Error fetching submission data:", errorMessage);
+      setSubmissionData(data);
+      if (data.status === 'ERROR_IDENTIFICATION' || data.status === 'ERROR_VALUATION') {
+        const errorMessage = data.errorMessage || `An error occurred during ${data.status.toLowerCase().includes('identification') ? 'identification' : 'valuation'}.`;
         setError(errorMessage);
-        toast({ variant: "destructive", title: "Load Error", description: errorMessage });
+        toast({ variant: "destructive", title: "Processing Error", description: errorMessage });
+      } else if (data.status === 'COMPLETED') {
+         toast({ title: "Success!", description: "Card details and estimations loaded.", variant: "default" });
+      } else {
+        // Should ideally not happen if scan-card completes fully
+        setError("Card processing is not yet complete or in an unknown state.");
+         toast({ variant: "destructive", title: "Unexpected State", description: "Card processing is not yet complete." });
+      }
+      } else {
+      const errorMessage = data.error || "Could not retrieve submission data.";
+      console.warn("Error fetching submission data:", errorMessage);
+      setError(errorMessage);
+      toast({ variant: "destructive", title: "Load Error", description: errorMessage });
       }
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : "Failed to load submission data.";
@@ -77,7 +75,7 @@ function CardPriceContent() {
     } finally {
       setIsLoading(false);
     }
-  };
+    }, []);
   
   if (isLoading) {
     return (

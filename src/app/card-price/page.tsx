@@ -36,11 +36,12 @@ function CardPriceContent() {
       setSubmissionId(subIdFromParams);
       fetchInitialImageData(subIdFromParams);
     } else {
-      setError("No submission ID found. Please go back and upload an image.");
-      toast({ variant: "destructive", title: "Error", description: "Missing submission information." });
+      const noIdError = "No submission ID found. Please go back and upload an image.";
+      setError(noIdError);
+      toast({ variant: "destructive", title: "Error", description: noIdError });
       setIsLoadingInitialData(false);
     }
-  }, [searchParams]);
+  }, [searchParams]); // Removed toast from dependency array as it's stable
 
   const fetchInitialImageData = async (subId: string) => {
     setError(null);
@@ -52,11 +53,15 @@ function CardPriceContent() {
         setImageDataUri(result.imageDataUri);
         processCardIdentificationAndValuation(result.imageDataUri);
       } else {
-        throw new Error(result.error || "Could not retrieve image data for this submission.");
+        // Directly handle the error from the action without re-throwing
+        const errorMessage = result.error || "Could not retrieve image data for this submission.";
+        console.error("Error fetching initial image data (from action):", errorMessage);
+        setError(errorMessage);
+        toast({ variant: "destructive", title: "Load Error", description: errorMessage });
       }
-    } catch (e) {
+    } catch (e) { // Catches other unexpected errors
       const errorMessage = e instanceof Error ? e.message : "Failed to load image data.";
-      console.error("Error fetching initial image data:", e);
+      console.error("Error fetching initial image data (unexpected):", e);
       setError(errorMessage);
       toast({ variant: "destructive", title: "Load Error", description: errorMessage });
     } finally {
@@ -65,7 +70,7 @@ function CardPriceContent() {
   };
   
   const processCardIdentificationAndValuation = async (dataUri: string) => {
-    setError(null); // Clear previous errors before starting new processing
+    setError(null); 
     setIsLoadingIdentification(true);
     setCardName(null);
     setCardNumber(null);
@@ -118,7 +123,7 @@ function CardPriceContent() {
     }
   };
   
-  if (isLoadingInitialData) {
+  if (isLoadingInitialData && !error) { // Only show main loader if no immediate error
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
         <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
@@ -136,7 +141,7 @@ function CardPriceContent() {
           <Sparkles className="h-10 w-10 text-accent" />
         </div>
         <p className="text-muted-foreground mt-2 text-lg">
-          Here are the details and estimated value of your card!
+          {!error ? "Here are the details and estimated value of your card!" : "There was an issue loading your card."}
         </p>
       </header>
 
@@ -152,16 +157,20 @@ function CardPriceContent() {
           </Alert>
         )}
 
-        <CardInfoDisplay
-          imageDataUri={imageDataUri}
-          cardName={cardName}
-          cardNumber={cardNumber}
-          deckIdLetter={deckIdLetter}
-          illustratorName={illustratorName}
-          estimations={estimations}
-          isLoadingIdentification={isLoadingIdentification || isLoadingInitialData} 
-          isLoadingValuation={isLoadingValuation}
-        />
+        {/* Conditionally render CardInfoDisplay only if there's no critical initial load error */}
+        {/* Or if some data has been partially loaded despite a later error */}
+        {(!error || imageDataUri || cardName) && (
+            <CardInfoDisplay
+              imageDataUri={imageDataUri}
+              cardName={cardName}
+              cardNumber={cardNumber}
+              deckIdLetter={deckIdLetter}
+              illustratorName={illustratorName}
+              estimations={estimations}
+              isLoadingIdentification={isLoadingIdentification || (isLoadingInitialData && !error) } 
+              isLoadingValuation={isLoadingValuation}
+            />
+        )}
       </main>
       <footer className="mt-12 text-center text-sm text-muted-foreground">
         <p>&copy; {new Date().getFullYear()} PokeValue. Powered by AI.</p>

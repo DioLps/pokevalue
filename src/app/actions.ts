@@ -13,19 +13,19 @@ export async function getSubmittedImageDataAction(
   try {
     if (!submissionId || typeof submissionId !== 'string') {
       console.error('Invalid submissionId provided to getSubmittedImageDataAction:', submissionId);
-      return { imageDataUri: null, error: 'Invalid submission ID format.' };
+      return { imageDataUri: null, error: 'Invalid submission ID format. Please try uploading again.' };
     }
     const imageDataUri = getSubmission(submissionId);
     if (!imageDataUri) {
       console.warn(`No image data found for submissionId: ${submissionId}`);
-      return { imageDataUri: null, error: 'Image data not found or expired for this submission.' };
+      return { imageDataUri: null, error: 'Your card image session may have expired or the link is invalid. Please try uploading your card again.' };
     }
     return { imageDataUri };
   } catch (error) {
     console.error('Error in getSubmittedImageDataAction:', error);
     return { 
       imageDataUri: null, 
-      error: `Failed to retrieve image data: ${error instanceof Error ? error.message : String(error)}` 
+      error: `Failed to retrieve image data: ${error instanceof Error ? error.message : String(error)}. Please try uploading again.` 
     };
   }
 }

@@ -58,6 +58,7 @@ export default function HomePage() {
     });
 
     try {
+      setView("loadingResults");
       const response:
         | IdentifyPokemonCardOutput & {
           valuationResult: EstimateCardValueOutput;
@@ -81,6 +82,7 @@ export default function HomePage() {
         return;
       }
 
+      setView("displayingResults");
       setSubmissionData(response);
     } catch (error) {
       console.error("Error scanning card:", error);

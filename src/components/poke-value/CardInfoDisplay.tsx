@@ -2,17 +2,17 @@
 'use client';
 
 import Image from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { DollarSign, Info, ShoppingCart, ExternalLink, Hash } from 'lucide-react';
+import { DollarSign, Info, ShoppingCart, ExternalLink, Hash, Search } from 'lucide-react';
+import type { EstimateCardValueOutput } from '@/ai/flows/estimate-card-value';
 
 interface CardInfoDisplayProps {
   imageDataUri: string | null;
   cardName: string | null;
-  serialNumber: string | null; // Changed from description to serialNumber
-  estimatedValue: string | null;
-  marketplace: string | null;
+  serialNumber: string | null;
+  estimations: EstimateCardValueOutput;
   isLoadingIdentification: boolean;
   isLoadingValuation: boolean;
 }
@@ -20,25 +20,18 @@ interface CardInfoDisplayProps {
 export function CardInfoDisplay({
   imageDataUri,
   cardName,
-  serialNumber, // Changed from description to serialNumber
-  estimatedValue,
-  marketplace,
+  serialNumber,
+  estimations,
   isLoadingIdentification,
   isLoadingValuation,
 }: CardInfoDisplayProps) {
   if (!isLoadingIdentification && !isLoadingValuation && !cardName && !imageDataUri) {
-    return null; // Nothing to display yet
+    return null; 
   }
 
-  const getMarketplaceSearchUrl = () => {
-    if (!cardName || !marketplace) return '#';
-    const searchTerm = encodeURIComponent(`${cardName} Pokemon card`);
-    if (marketplace.toLowerCase() === 'ebay') {
-      return `https://www.ebay.com/sch/i.html?_nkw=${searchTerm}`;
-    }
-    // Generic Google search for other marketplaces
-    return `https://www.google.com/search?q=${searchTerm}+${encodeURIComponent(marketplace)}`;
-  };
+  const hasValidEstimations = estimations && estimations.length > 0 && estimations.some(
+    est => est.estimatedValue && est.estimatedValue.toLowerCase() !== "not found" && est.estimatedValue.toLowerCase() !== "n/a"
+  );
 
   return (
     <Card className="w-full shadow-lg mt-6">
@@ -74,9 +67,7 @@ export function CardInfoDisplay({
                   {isLoadingIdentification ? <Skeleton className="h-7 w-3/4" /> : cardName || "Identifying..."}
                 </h3>
                 {isLoadingIdentification && !serialNumber ? (
-                  <div className="space-y-2 mt-1">
-                    <Skeleton className="h-4 w-2/3" />
-                  </div>
+                  <Skeleton className="h-4 w-2/3 mt-1" />
                 ) : serialNumber ? (
                   <p className="text-sm text-muted-foreground flex items-center">
                     <Hash size={14} className="mr-1 text-muted-foreground/80" /> {serialNumber}
@@ -84,43 +75,78 @@ export function CardInfoDisplay({
                 ) : null}
               </div>
 
-              {(isLoadingValuation || (estimatedValue && marketplace)) && (
+              {(isLoadingValuation || (estimations && estimations.length > 0)) && (
                 <div className="pt-4 border-t">
-                  <h4 className="text-md font-semibold mb-2 flex items-center">
-                    <DollarSign size={20} className="mr-2 text-accent" /> Estimated Value
+                  <h4 className="text-md font-semibold mb-3 flex items-center">
+                    <DollarSign size={20} className="mr-2 text-accent" /> Estimated Values
                   </h4>
                   {isLoadingValuation ? (
-                    <div className="space-y-2">
-                      <Skeleton className="h-6 w-1/2" />
-                      <Skeleton className="h-4 w-1/3" />
-                       <Skeleton className="h-10 w-3/4 mt-2" />
+                    <div className="space-y-3">
+                      <Skeleton className="h-6 w-3/4" />
+                      <Skeleton className="h-4 w-1/2" />
+                      <Skeleton className="h-10 w-full mt-1" />
+                      <Skeleton className="h-6 w-3/4 mt-2" />
+                      <Skeleton className="h-4 w-1/2" />
+                      <Skeleton className="h-10 w-full mt-1" />
                     </div>
+                  ) : estimations && estimations.length > 0 ? (
+                    <ul className="space-y-4">
+                      {estimations.map((est, index) => (
+                        <li key={index} className="p-3 border rounded-md bg-secondary/30">
+                          <p className="text-xl font-bold text-primary">{est.estimatedValue}</p>
+                          <p className="text-xs text-muted-foreground">Source: {est.marketplace}</p>
+                          {(est.estimatedValue.toLowerCase() !== "not found" && est.estimatedValue.toLowerCase() !== "n/a" && est.searchUrl) && (
+                            <Button 
+                              variant="default" 
+                              size="sm" 
+                              className="mt-2"
+                              onClick={() => window.open(est.searchUrl, '_blank')}
+                            >
+                              See on {est.marketplace}
+                              <ExternalLink size={16} className="ml-2" />
+                            </Button>
+                          )}
+                           { (est.estimatedValue.toLowerCase() === "not found" || est.estimatedValue.toLowerCase() === "n/a") && est.searchUrl && (
+                             <Button
+                              variant="outline"
+                              size="sm"
+                              className="mt-2"
+                              onClick={() => window.open(est.searchUrl, '_blank')}
+                            >
+                              Search on {est.marketplace}
+                              <Search size={16} className="ml-2" />
+                            </Button>
+                           )}
+                        </li>
+                      ))}
+                    </ul>
                   ) : (
-                    <>
-                      <p className="text-2xl font-bold text-primary">{estimatedValue}</p>
-                      {marketplace && <p className="text-xs text-muted-foreground">Source: {marketplace}</p>}
-                      {marketplace && cardName && estimatedValue && (
-                        <Button 
-                          variant="default" 
-                          size="sm" 
-                          className="mt-2"
-                          onClick={() => window.open(getMarketplaceSearchUrl(), '_blank')}
-                        >
-                          See on {marketplace}
-                          <ExternalLink size={16} className="ml-2" />
-                        </Button>
-                      )}
-                    </>
+                     <div className="text-center text-muted-foreground p-4">
+                        <ShoppingCart size={32} className="mx-auto mb-2"/>
+                        <p>No valuation data found for this card.</p>
+                     </div>
                   )}
                 </div>
               )}
             </div>
           </div>
         )}
-         {!isLoadingIdentification && !isLoadingValuation && cardName && !(estimatedValue && marketplace) && (
-          <div className="text-center text-muted-foreground p-4">
+         {!isLoadingIdentification && !isLoadingValuation && cardName && !hasValidEstimations && estimations.length > 0 && (
+          <div className="text-center text-muted-foreground p-4 border-t mt-4">
             <ShoppingCart size={32} className="mx-auto mb-2"/>
-            <p>Card identified. Value estimation might have failed or is not available.</p>
+            <p>Card identified. Value estimation data might not be available or could not be found on marketplaces.</p>
+             { estimations.map((est, index) => est.searchUrl && (
+                <Button 
+                    key={`search-fallback-${index}`}
+                    variant="link" 
+                    size="sm" 
+                    className="mt-1"
+                    onClick={() => window.open(est.searchUrl, '_blank')}
+                >
+                    Try searching on {est.marketplace} manually
+                    <ExternalLink size={16} className="ml-2" />
+                </Button>
+            ))}
           </div>
         )}
       </CardContent>

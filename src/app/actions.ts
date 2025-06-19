@@ -26,8 +26,14 @@ export async function estimateCardValueAction(
 ): Promise<EstimateCardValueOutput> {
   try {
     const result = await estimateCardValue(input);
-     if (!result || !result.estimatedValue) {
-        throw new Error('AI failed to estimate card value.');
+     if (!result || result.length === 0) { // Check if result is empty or undefined
+        throw new Error('AI failed to return any card value estimations.');
+    }
+    // Optionally, check if at least one estimation has a value
+    const hasAnyValue = result.some(est => est.estimatedValue && est.estimatedValue.toLowerCase() !== "not found" && est.estimatedValue.toLowerCase() !== "n/a");
+    if (!hasAnyValue) {
+      // This case might be okay depending on requirements, but we can log it
+      console.warn('AI returned estimations, but no concrete values were found for any marketplace.');
     }
     return result;
   } catch (error) {
@@ -35,3 +41,4 @@ export async function estimateCardValueAction(
     throw new Error(`Failed to estimate card value: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
+

@@ -10,37 +10,35 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, AlertTriangle, Sparkles } from 'lucide-react';
 import { identifyPokemonCardAction, estimateCardValueAction } from './actions';
+import type { EstimateCardValueOutput } from '@/ai/flows/estimate-card-value';
 import { useToast } from "@/hooks/use-toast";
 
 export default function PokeValuePage() {
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
   const [cardName, setCardName] = useState<string | null>(null);
   const [cardSerialNumber, setCardSerialNumber] = useState<string | null>(null);
-  const [estimatedValue, setEstimatedValue] = useState<string | null>(null);
-  const [marketplace, setMarketplace] = useState<string | null>(null);
+  const [estimations, setEstimations] = useState<EstimateCardValueOutput>([]);
   
   const [isLoadingIdentification, setIsLoadingIdentification] = useState(false);
   const [isLoadingValuation, setIsLoadingValuation] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Derived state for overall loading
   const isLoading = isLoadingIdentification || isLoadingValuation;
 
   const resetAllStates = () => {
     setImageDataUri(null);
     setCardName(null);
     setCardSerialNumber(null);
-    setEstimatedValue(null);
-    setMarketplace(null);
+    setEstimations([]);
     setIsLoadingIdentification(false);
     setIsLoadingValuation(false);
     setError(null);
   };
 
   const handleImageSelectedAndProcess = async (dataUri: string) => {
-    resetAllStates(); // Reset states before new processing
-    setImageDataUri(dataUri); // Set new image
+    resetAllStates(); 
+    setImageDataUri(dataUri); 
     setError(null);
     setIsLoadingIdentification(true);
 
@@ -48,17 +46,19 @@ export default function PokeValuePage() {
       toast({ title: "Identifying Card...", description: "Please wait while we analyze your Pokemon card."});
       const identificationResult = await identifyPokemonCardAction({ photoDataUri: dataUri });
       setCardName(identificationResult.cardName);
-      setCardSerialNumber(identificationResult.serialNumber); // Corrected to use serialNumber (lowercase 's')
+      setCardSerialNumber(identificationResult.serialNumber);
       setIsLoadingIdentification(false);
 
-      if (identificationResult.cardName) {
+      if (identificationResult.cardName && identificationResult.serialNumber) {
         setIsLoadingValuation(true);
-        toast({ title: "Estimating Value...", description: `Searching for ${identificationResult.cardName} value.`});
+        toast({ title: "Estimating Value...", description: `Searching for ${identificationResult.cardName} (${identificationResult.serialNumber}) value on multiple marketplaces.`});
         try {
-          const valuationResult = await estimateCardValueAction({ cardName: identificationResult.cardName });
-          setEstimatedValue(valuationResult.estimatedValue);
-          setMarketplace(valuationResult.marketplace);
-          toast({ title: "Success!", description: "Card identified and value estimated.", variant: "default" });
+          const valuationResult = await estimateCardValueAction({ 
+            cardName: identificationResult.cardName,
+            serialNumber: identificationResult.serialNumber 
+          });
+          setEstimations(valuationResult);
+          toast({ title: "Success!", description: "Card identified and value estimation process complete.", variant: "default" });
         } catch (valuationError) {
           const errorMessage = valuationError instanceof Error ? valuationError.message : "An unknown error occurred during valuation.";
           console.error("Valuation error:", valuationError);
@@ -68,7 +68,9 @@ export default function PokeValuePage() {
           setIsLoadingValuation(false);
         }
       } else {
-         toast({ variant: "destructive", title: "Identification Issue", description: "Could not retrieve card name for valuation." });
+         toast({ variant: "destructive", title: "Identification Issue", description: "Could not retrieve full card details for valuation." });
+         if (!identificationResult.cardName) setError("AI failed to identify card name.");
+         if (!identificationResult.serialNumber) setError("AI failed to identify card serial number.");
       }
 
     } catch (identificationError) {
@@ -113,8 +115,7 @@ export default function PokeValuePage() {
           imageDataUri={imageDataUri}
           cardName={cardName}
           serialNumber={cardSerialNumber} 
-          estimatedValue={estimatedValue}
-          marketplace={marketplace}
+          estimations={estimations}
           isLoadingIdentification={isLoadingIdentification}
           isLoadingValuation={isLoadingValuation}
         />

@@ -8,7 +8,7 @@ import { PokeballIcon } from '@/components/icons/PokeballIcon';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, AlertTriangle, Sparkles, ArrowLeft } from 'lucide-react';
-import { identifyPokemonCardAction, estimateCardValueAction } from '../actions';
+import { identifyPokemonCardAction, estimateCardValueAction, getSubmittedImageDataAction } from '../actions';
 import type { EstimateCardValueOutput } from '@/ai/flows/estimate-card-value';
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,6 +17,7 @@ function CardPriceContent() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
 
+  const [submissionId, setSubmissionId] = useState<string | null>(null);
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
   const [cardName, setCardName] = useState<string | null>(null);
   const [cardNumber, setCardNumber] = useState<string | null>(null);
@@ -24,30 +25,47 @@ function CardPriceContent() {
   const [illustratorName, setIllustratorName] = useState<string | null>(null);
   const [estimations, setEstimations] = useState<EstimateCardValueOutput>([]);
   
+  const [isLoadingInitialData, setIsLoadingInitialData] = useState(true);
   const [isLoadingIdentification, setIsLoadingIdentification] = useState(false);
   const [isLoadingValuation, setIsLoadingValuation] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const uriFromParams = searchParams.get('imageDataUri');
-    if (uriFromParams) {
-      try {
-        const decodedUri = decodeURIComponent(uriFromParams);
-        setImageDataUri(decodedUri);
-        processCard(decodedUri);
-      } catch (e) {
-        console.error("Failed to decode imageDataUri:", e);
-        setError("Invalid image data provided in URL.");
-        toast({ variant: "destructive", title: "Error", description: "Could not load image data from URL." });
-      }
+    const subIdFromParams = searchParams.get('submissionId');
+    if (subIdFromParams) {
+      setSubmissionId(subIdFromParams);
+      fetchInitialImageData(subIdFromParams);
     } else {
-      setError("No image data provided. Please go back and upload an image.");
-      toast({ variant: "destructive", title: "Missing Image", description: "No image was provided to scan." });
+      setError("No submission ID found. Please go back and upload an image.");
+      toast({ variant: "destructive", title: "Error", description: "Missing submission information." });
+      setIsLoadingInitialData(false);
     }
   }, [searchParams]);
 
-  const processCard = async (dataUri: string) => {
+  const fetchInitialImageData = async (subId: string) => {
     setError(null);
+    setIsLoadingInitialData(true);
+    try {
+      toast({ title: "Loading Card Image...", description: "Please wait while we retrieve your card image."});
+      const result = await getSubmittedImageDataAction(subId);
+      if (result.imageDataUri) {
+        setImageDataUri(result.imageDataUri);
+        processCardIdentificationAndValuation(result.imageDataUri);
+      } else {
+        throw new Error(result.error || "Could not retrieve image data for this submission.");
+      }
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : "Failed to load image data.";
+      console.error("Error fetching initial image data:", e);
+      setError(errorMessage);
+      toast({ variant: "destructive", title: "Load Error", description: errorMessage });
+    } finally {
+      setIsLoadingInitialData(false);
+    }
+  };
+  
+  const processCardIdentificationAndValuation = async (dataUri: string) => {
+    setError(null); // Clear previous errors before starting new processing
     setIsLoadingIdentification(true);
     setCardName(null);
     setCardNumber(null);
@@ -100,7 +118,7 @@ function CardPriceContent() {
     }
   };
   
-  if (!imageDataUri && !error && !isLoadingIdentification) {
+  if (isLoadingInitialData) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
         <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
@@ -141,7 +159,7 @@ function CardPriceContent() {
           deckIdLetter={deckIdLetter}
           illustratorName={illustratorName}
           estimations={estimations}
-          isLoadingIdentification={isLoadingIdentification}
+          isLoadingIdentification={isLoadingIdentification || isLoadingInitialData} 
           isLoadingValuation={isLoadingValuation}
         />
       </main>

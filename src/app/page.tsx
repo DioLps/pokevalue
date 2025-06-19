@@ -18,7 +18,7 @@ export default function UploadPage() {
     setSelectedImageDataUri(dataUri);
   };
 
-  const handleScanClicked = (dataUri: string) => {
+  const handleScanClicked = async (dataUri: string) => {
     if (!dataUri) {
       toast({
         variant: "destructive",
@@ -28,9 +28,36 @@ export default function UploadPage() {
       return;
     }
     setIsScanning(true);
-    // Encode the Data URI to make it safe for URL query parameter
-    const encodedDataUri = encodeURIComponent(dataUri);
-    router.push(`/card-price?imageDataUri=${encodedDataUri}`);
+    try {
+      const response = await fetch('/api/prepare-card-price', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ imageDataUri: dataUri }),
+      });
+
+      if (response.ok) {
+        const { submissionId } = await response.json();
+        if (submissionId) {
+          router.push(`/card-price?submissionId=${submissionId}`);
+        } else {
+          throw new Error('Submission ID not received from server.');
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({ message: "Failed to prepare card for scanning. Please try again." }));
+        throw new Error(errorData.message || "Server error during card preparation.");
+      }
+    } catch (error) {
+      console.error("Error preparing card for scanning:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+      toast({
+        variant: "destructive",
+        title: "Scan Error",
+        description: errorMessage,
+      });
+      setIsScanning(false);
+    }
   };
 
   return (

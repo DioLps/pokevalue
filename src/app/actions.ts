@@ -5,6 +5,31 @@ import type { IdentifyPokemonCardInput, IdentifyPokemonCardOutput } from '@/ai/f
 import { identifyPokemonCard } from '@/ai/flows/identify-pokemon-card';
 import type { EstimateCardValueInput, EstimateCardValueOutput } from '@/ai/flows/estimate-card-value';
 import { estimateCardValue } from '@/ai/flows/estimate-card-value';
+import { getSubmission } from '@/lib/temp-store';
+
+export async function getSubmittedImageDataAction(
+  submissionId: string
+): Promise<{ imageDataUri: string | null; error?: string }> {
+  try {
+    if (!submissionId || typeof submissionId !== 'string') {
+      console.error('Invalid submissionId provided to getSubmittedImageDataAction:', submissionId);
+      return { imageDataUri: null, error: 'Invalid submission ID format.' };
+    }
+    const imageDataUri = getSubmission(submissionId);
+    if (!imageDataUri) {
+      console.warn(`No image data found for submissionId: ${submissionId}`);
+      return { imageDataUri: null, error: 'Image data not found or expired for this submission.' };
+    }
+    return { imageDataUri };
+  } catch (error) {
+    console.error('Error in getSubmittedImageDataAction:', error);
+    return { 
+      imageDataUri: null, 
+      error: `Failed to retrieve image data: ${error instanceof Error ? error.message : String(error)}` 
+    };
+  }
+}
+
 
 export async function identifyPokemonCardAction(
   input: IdentifyPokemonCardInput

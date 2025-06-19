@@ -39,8 +39,8 @@ export function ImageUpload({ onFileSelected, onScanClicked, isLoading, imagePre
         if(fileInputRef.current) fileInputRef.current.value = "";
         return;
       }
-      if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
-        setError('Invalid file type. Please select a JPG, PNG, WEBP or GIF image.');
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        setError('Invalid file type. Please select a JPG, PNG or WEBP image.');
         onFileSelected(''); // Clear preview if error
         if(fileInputRef.current) fileInputRef.current.value = "";
         return;
@@ -86,7 +86,7 @@ export function ImageUpload({ onFileSelected, onScanClicked, isLoading, imagePre
         </div>
 
         {imagePreviewUrl && (
-          <div className="mt-4 p-2 border rounded-md bg-muted/50 flex justify-center items-center aspect-[3/4] max-h-[300px] overflow-hidden">
+          <div className="mt-4 p-2 mx-auto border rounded-md bg-muted/50 flex justify-center items-center aspect-[3/4] max-h-[300px] overflow-hidden">
             <Image
               src={imagePreviewUrl}
               alt="Pokemon card preview"

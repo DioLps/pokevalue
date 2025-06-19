@@ -1,18 +1,18 @@
 
 'use client';
 
-import { useState, type ChangeEvent, useRef, useEffect } from 'react';
+import { useState, type ChangeEvent, useRef } from 'react';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UploadCloud, RotateCcw, ScanLine } from 'lucide-react';
+import { UploadCloud, ScanLine } from 'lucide-react';
 
 interface ImageUploadProps {
-  onImageSelected: (dataUri: string) => void;
-  onReset: () => void;
+  onFileSelected: (dataUri: string) => void;
+  onScanClicked: (dataUri: string) => void;
   isLoading: boolean;
-  currentImagePreview: string | null;
+  imagePreviewUrl: string | null;
 }
 
 const fileToDataUri = (file: File): Promise<string> => {
@@ -26,57 +26,43 @@ const fileToDataUri = (file: File): Promise<string> => {
   });
 };
 
-export function ImageUpload({ onImageSelected, onReset, isLoading, currentImagePreview }: ImageUploadProps) {
-  const [internalPreview, setInternalPreview] = useState<string | null>(null);
+export function ImageUpload({ onFileSelected, onScanClicked, isLoading, imagePreviewUrl }: ImageUploadProps) {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    setInternalPreview(currentImagePreview);
-  }, [currentImagePreview]);
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) { // 5MB limit
         setError('File size exceeds 5MB. Please choose a smaller image.');
-        setInternalPreview(null);
+        onFileSelected(''); // Clear preview if error
         if(fileInputRef.current) fileInputRef.current.value = "";
         return;
       }
       if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
         setError('Invalid file type. Please select a JPG, PNG, WEBP or GIF image.');
-        setInternalPreview(null);
+        onFileSelected(''); // Clear preview if error
         if(fileInputRef.current) fileInputRef.current.value = "";
         return;
       }
       setError(null);
       try {
         const dataUri = await fileToDataUri(file);
-        setInternalPreview(dataUri);
+        onFileSelected(dataUri);
       } catch (err) {
         console.error('Error converting file to data URI:', err);
         setError('Could not read image file. Please try again.');
-        setInternalPreview(null);
+        onFileSelected(''); // Clear preview if error
       }
     }
   };
 
   const handleScan = () => {
-    if (internalPreview) {
-      onImageSelected(internalPreview);
+    if (imagePreviewUrl) {
+      onScanClicked(imagePreviewUrl);
     } else {
       setError('Please select an image first.');
     }
-  };
-
-  const handleReset = () => {
-    setInternalPreview(null);
-    setError(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-    onReset();
   };
 
   return (
@@ -99,10 +85,10 @@ export function ImageUpload({ onImageSelected, onReset, isLoading, currentImageP
           {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
 
-        {internalPreview && (
+        {imagePreviewUrl && (
           <div className="mt-4 p-2 border rounded-md bg-muted/50 flex justify-center items-center aspect-[3/4] max-h-[300px] overflow-hidden">
             <Image
-              src={internalPreview}
+              src={imagePreviewUrl}
               alt="Pokemon card preview"
               width={200}
               height={280}
@@ -113,16 +99,12 @@ export function ImageUpload({ onImageSelected, onReset, isLoading, currentImageP
         )}
 
         <div className="flex flex-col sm:flex-row gap-2 mt-4">
-          <Button onClick={handleScan} disabled={isLoading || !internalPreview} className="w-full sm:w-auto flex-grow bg-accent hover:bg-accent/90 text-accent-foreground">
+          <Button onClick={handleScan} disabled={isLoading || !imagePreviewUrl} className="w-full sm:w-auto flex-grow bg-accent hover:bg-accent/90 text-accent-foreground">
             <ScanLine className="mr-2 h-5 w-5" />
-            {isLoading ? 'Scanning...' : 'Scan Card'}
-          </Button>
-          <Button onClick={handleReset} variant="outline" disabled={isLoading} className="w-full sm:w-auto">
-            <RotateCcw className="mr-2 h-5 w-5" />
-            Reset
+            {isLoading ? 'Processing...' : 'Scan Card'}
           </Button>
         </div>
-         {!internalPreview && !isLoading && (
+         {!imagePreviewUrl && !isLoading && (
           <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg text-muted-foreground h-48">
             <UploadCloud size={48} className="mb-2" />
             <p className="text-center">Upload an image to see a preview</p>

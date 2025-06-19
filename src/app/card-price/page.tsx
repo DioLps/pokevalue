@@ -41,7 +41,7 @@ function CardPriceContent() {
       toast({ variant: "destructive", title: "Error", description: noIdError });
       setIsLoadingInitialData(false);
     }
-  }, [searchParams]); // Removed toast from dependency array as it's stable
+  }, [searchParams]);
 
   const fetchInitialImageData = async (subId: string) => {
     setError(null);
@@ -55,7 +55,7 @@ function CardPriceContent() {
       } else {
         // Directly handle the error from the action without re-throwing
         const errorMessage = result.error || "Could not retrieve image data for this submission.";
-        console.error("Error fetching initial image data (from action):", errorMessage);
+        console.warn("Error fetching initial image data (from action):", errorMessage);
         setError(errorMessage);
         toast({ variant: "destructive", title: "Load Error", description: errorMessage });
       }

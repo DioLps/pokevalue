@@ -5,13 +5,15 @@ import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { DollarSign, Info, ShoppingCart, ExternalLink, Hash, Search } from 'lucide-react';
+import { DollarSign, Info, ShoppingCart, ExternalLink, Hash, Palette, BadgePercent } from 'lucide-react';
 import type { EstimateCardValueOutput } from '@/ai/flows/estimate-card-value';
 
 interface CardInfoDisplayProps {
   imageDataUri: string | null;
   cardName: string | null;
-  serialNumber: string | null;
+  cardNumber: string | null;
+  deckIdLetter: string | null;
+  illustratorName: string | null;
   estimations: EstimateCardValueOutput;
   isLoadingIdentification: boolean;
   isLoadingValuation: boolean;
@@ -20,7 +22,9 @@ interface CardInfoDisplayProps {
 export function CardInfoDisplay({
   imageDataUri,
   cardName,
-  serialNumber,
+  cardNumber,
+  deckIdLetter,
+  illustratorName,
   estimations,
   isLoadingIdentification,
   isLoadingValuation,
@@ -66,13 +70,27 @@ export function CardInfoDisplay({
                 <h3 className="text-lg font-semibold text-primary mb-1 font-headline">
                   {isLoadingIdentification ? <Skeleton className="h-7 w-3/4" /> : cardName || "Identifying..."}
                 </h3>
-                {isLoadingIdentification && !serialNumber ? (
-                  <Skeleton className="h-4 w-2/3 mt-1" />
-                ) : serialNumber ? (
-                  <p className="text-sm text-muted-foreground flex items-center">
-                    <Hash size={14} className="mr-1 text-muted-foreground/80" /> {serialNumber}
-                  </p>
-                ) : null}
+                {isLoadingIdentification && !cardNumber ? (
+                  <>
+                    <Skeleton className="h-4 w-2/3 mt-1" />
+                    <Skeleton className="h-4 w-1/2 mt-1" />
+                  </>
+                ) : (
+                  <>
+                    {cardNumber && (
+                      <p className="text-sm text-muted-foreground flex items-center">
+                        <Hash size={14} className="mr-1 text-muted-foreground/80" /> 
+                        {cardNumber}
+                        {deckIdLetter && <span className="ml-1 font-semibold">({deckIdLetter})</span>}
+                      </p>
+                    )}
+                    {illustratorName && (
+                       <p className="text-sm text-muted-foreground flex items-center mt-1">
+                        <Palette size={14} className="mr-1 text-muted-foreground/80" /> {illustratorName}
+                      </p>
+                    )}
+                  </>
+                )}
               </div>
 
               {(isLoadingValuation || (estimations && estimations.length > 0)) && (
@@ -82,11 +100,11 @@ export function CardInfoDisplay({
                   </h4>
                   {isLoadingValuation ? (
                     <div className="space-y-3">
-                      <Skeleton className="h-6 w-3/4" />
-                      <Skeleton className="h-4 w-1/2" />
+                      <Skeleton className="h-6 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
                       <Skeleton className="h-10 w-full mt-1" />
-                      <Skeleton className="h-6 w-3/4 mt-2" />
-                      <Skeleton className="h-4 w-1/2" />
+                      <Skeleton className="h-6 w-full mt-2" />
+                      <Skeleton className="h-4 w-3/4" />
                       <Skeleton className="h-10 w-full mt-1" />
                     </div>
                   ) : estimations && estimations.length > 0 ? (
@@ -95,30 +113,25 @@ export function CardInfoDisplay({
                         <li key={index} className="p-3 border rounded-md bg-secondary/30">
                           <p className="text-xl font-bold text-primary">{est.estimatedValue}</p>
                           <p className="text-xs text-muted-foreground">Source: {est.marketplace}</p>
-                          {(est.estimatedValue.toLowerCase() !== "not found" && est.estimatedValue.toLowerCase() !== "n/a" && est.searchUrl) && (
+                          {est.searchUrl && (
                             <Button 
-                              variant="default" 
+                              variant={ (est.estimatedValue.toLowerCase() !== "not found" && est.estimatedValue.toLowerCase() !== "n/a") ? "default" : "outline"}
                               size="sm" 
                               className="mt-2"
                               onClick={() => window.open(est.searchUrl, '_blank')}
                             >
-                              See on {est.marketplace}
+                              {(est.estimatedValue.toLowerCase() !== "not found" && est.estimatedValue.toLowerCase() !== "n/a") ? `See on ${est.marketplace}` : `Search on ${est.marketplace}`}
                               <ExternalLink size={16} className="ml-2" />
                             </Button>
                           )}
-                           { (est.estimatedValue.toLowerCase() === "not found" || est.estimatedValue.toLowerCase() === "n/a") && est.searchUrl && (
-                             <Button
-                              variant="outline"
-                              size="sm"
-                              className="mt-2"
-                              onClick={() => window.open(est.searchUrl, '_blank')}
-                            >
-                              Search on {est.marketplace}
-                              <Search size={16} className="ml-2" />
-                            </Button>
-                           )}
                         </li>
                       ))}
+                       {!hasValidEstimations && (
+                         <li className="text-center text-muted-foreground p-3">
+                            <ShoppingCart size={24} className="mx-auto mb-1"/>
+                            No concrete price estimations found. Try searching manually.
+                         </li>
+                       )}
                     </ul>
                   ) : (
                      <div className="text-center text-muted-foreground p-4">

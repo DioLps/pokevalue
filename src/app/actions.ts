@@ -11,8 +11,8 @@ export async function identifyPokemonCardAction(
 ): Promise<IdentifyPokemonCardOutput> {
   try {
     const result = await identifyPokemonCard(input);
-    if (!result || !result.cardName) {
-        throw new Error('AI failed to identify the card name.');
+    if (!result || !result.cardName || !result.cardNumber) { // Ensure essential fields are present
+        throw new Error('AI failed to identify the card name or number.');
     }
     return result;
   } catch (error) {
@@ -26,13 +26,11 @@ export async function estimateCardValueAction(
 ): Promise<EstimateCardValueOutput> {
   try {
     const result = await estimateCardValue(input);
-     if (!result || result.length === 0) { // Check if result is empty or undefined
+     if (!result || result.length === 0) {
         throw new Error('AI failed to return any card value estimations.');
     }
-    // Optionally, check if at least one estimation has a value
     const hasAnyValue = result.some(est => est.estimatedValue && est.estimatedValue.toLowerCase() !== "not found" && est.estimatedValue.toLowerCase() !== "n/a");
     if (!hasAnyValue) {
-      // This case might be okay depending on requirements, but we can log it
       console.warn('AI returned estimations, but no concrete values were found for any marketplace.');
     }
     return result;
@@ -41,4 +39,3 @@ export async function estimateCardValueAction(
     throw new Error(`Failed to estimate card value: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
-

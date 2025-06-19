@@ -16,7 +16,9 @@ import { useToast } from "@/hooks/use-toast";
 export default function PokeValuePage() {
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
   const [cardName, setCardName] = useState<string | null>(null);
-  const [cardSerialNumber, setCardSerialNumber] = useState<string | null>(null);
+  const [cardNumber, setCardNumber] = useState<string | null>(null);
+  const [deckIdLetter, setDeckIdLetter] = useState<string | null>(null);
+  const [illustratorName, setIllustratorName] = useState<string | null>(null);
   const [estimations, setEstimations] = useState<EstimateCardValueOutput>([]);
   
   const [isLoadingIdentification, setIsLoadingIdentification] = useState(false);
@@ -29,7 +31,9 @@ export default function PokeValuePage() {
   const resetAllStates = () => {
     setImageDataUri(null);
     setCardName(null);
-    setCardSerialNumber(null);
+    setCardNumber(null);
+    setDeckIdLetter(null);
+    setIllustratorName(null);
     setEstimations([]);
     setIsLoadingIdentification(false);
     setIsLoadingValuation(false);
@@ -46,16 +50,21 @@ export default function PokeValuePage() {
       toast({ title: "Identifying Card...", description: "Please wait while we analyze your Pokemon card."});
       const identificationResult = await identifyPokemonCardAction({ photoDataUri: dataUri });
       setCardName(identificationResult.cardName);
-      setCardSerialNumber(identificationResult.serialNumber);
+      setCardNumber(identificationResult.cardNumber);
+      setDeckIdLetter(identificationResult.deckIdLetter || null);
+      setIllustratorName(identificationResult.illustratorName || null);
       setIsLoadingIdentification(false);
 
-      if (identificationResult.cardName && identificationResult.serialNumber) {
+      if (identificationResult.cardName && identificationResult.cardNumber) {
         setIsLoadingValuation(true);
-        toast({ title: "Estimating Value...", description: `Searching for ${identificationResult.cardName} (${identificationResult.serialNumber}) value on multiple marketplaces.`});
+        const displayCardIdentifier = `${identificationResult.cardName} #${identificationResult.cardNumber}${identificationResult.deckIdLetter ? identificationResult.deckIdLetter : ''}`;
+        toast({ title: "Estimating Value...", description: `Searching for ${displayCardIdentifier} value on multiple marketplaces.`});
         try {
           const valuationResult = await estimateCardValueAction({ 
             cardName: identificationResult.cardName,
-            serialNumber: identificationResult.serialNumber 
+            cardNumber: identificationResult.cardNumber,
+            deckIdLetter: identificationResult.deckIdLetter,
+            illustratorName: identificationResult.illustratorName,
           });
           setEstimations(valuationResult);
           toast({ title: "Success!", description: "Card identified and value estimation process complete.", variant: "default" });
@@ -63,14 +72,14 @@ export default function PokeValuePage() {
           const errorMessage = valuationError instanceof Error ? valuationError.message : "An unknown error occurred during valuation.";
           console.error("Valuation error:", valuationError);
           setError(`Failed to estimate card value: ${errorMessage}`);
-          toast({ variant: "destructive", title: "Valuation Error", description: `Could not estimate value for ${identificationResult.cardName}. ${errorMessage}` });
+          toast({ variant: "destructive", title: "Valuation Error", description: `Could not estimate value for ${displayCardIdentifier}. ${errorMessage}` });
         } finally {
           setIsLoadingValuation(false);
         }
       } else {
-         toast({ variant: "destructive", title: "Identification Issue", description: "Could not retrieve full card details for valuation." });
+         toast({ variant: "destructive", title: "Identification Issue", description: "Could not retrieve full card details for valuation. Card name or number missing." });
          if (!identificationResult.cardName) setError("AI failed to identify card name.");
-         if (!identificationResult.serialNumber) setError("AI failed to identify card serial number.");
+         if (!identificationResult.cardNumber) setError("AI failed to identify card number.");
       }
 
     } catch (identificationError) {
@@ -114,7 +123,9 @@ export default function PokeValuePage() {
         <CardInfoDisplay
           imageDataUri={imageDataUri}
           cardName={cardName}
-          serialNumber={cardSerialNumber} 
+          cardNumber={cardNumber}
+          deckIdLetter={deckIdLetter}
+          illustratorName={illustratorName}
           estimations={estimations}
           isLoadingIdentification={isLoadingIdentification}
           isLoadingValuation={isLoadingValuation}

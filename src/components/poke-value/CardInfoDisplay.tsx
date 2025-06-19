@@ -13,9 +13,7 @@ interface CardInfoDisplayProps {
   cardNumber: string | null;
   deckIdLetter: string | null;
   illustratorName: string | null;
-  estimations: EstimateCardValueOutput | null; // Allow null for estimations
-  isLoadingIdentification: boolean; // Kept for potential future use, though currently always false from parent
-  isLoadingValuation: boolean;    // Kept for potential future use, though currently always false from parent
+  estimations: EstimateCardValueOutput | null;
 }
 
 export function CardInfoDisplay({
@@ -25,18 +23,25 @@ export function CardInfoDisplay({
   deckIdLetter,
   illustratorName,
   estimations,
-  isLoadingIdentification, // Currently not used for skeletons as parent handles loading
-  isLoadingValuation,    // Currently not used for skeletons as parent handles loading
 }: CardInfoDisplayProps) {
 
   const hasValidEstimations = estimations && estimations.length > 0 && estimations.some(
     est => est.estimatedValue && est.estimatedValue.toLowerCase() !== "not found" && est.estimatedValue.toLowerCase() !== "n/a"
   );
 
-  // If there's no image data, don't render anything (parent page should handle this error state)
-  if (!imageDataUri) {
-    return null; 
+  if (!imageDataUri && !cardName) { // If no image and no card name, means something went very wrong or no data yet
+    return (
+        <Card className="w-full shadow-lg mt-6">
+            <CardHeader>
+                <CardTitle className="font-headline text-xl">Card Details &amp; Value</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p className="text-muted-foreground text-center py-4">No card data available to display.</p>
+            </CardContent>
+        </Card>
+    );
   }
+
 
   return (
     <Card className="w-full shadow-lg mt-6">
@@ -76,14 +81,13 @@ export function CardInfoDisplay({
                     <Palette size={14} className="mr-1 text-muted-foreground/80" /> {illustratorName}
                     </p>
                 )}
-                {!cardName && !cardNumber && !illustratorName && !isLoadingIdentification && (
+                {!cardName && !cardNumber && !illustratorName && (
                   <p className="text-sm text-muted-foreground">Details could not be identified.</p>
                 )}
               </>
             </div>
 
-            {/* Estimated Values Section - only shown if card was identified */}
-            {cardName && (
+            {cardName && ( // Only show estimations if card name was identified
               <div className="pt-4 border-t">
                 <h4 className="text-md font-semibold mb-3 flex items-center">
                   <DollarSign size={20} className="mr-2 text-accent" /> Estimated Values
@@ -110,7 +114,6 @@ export function CardInfoDisplay({
                       ))}
                     </ul>
                   ) : (
-                    // All estimations are "Not found" or "N/A"
                     <div className="text-center text-muted-foreground p-3">
                       <ShoppingCart size={24} className="mx-auto mb-1"/>
                       <p>No concrete price estimations found for this card on the marketplaces.</p>
@@ -130,7 +133,6 @@ export function CardInfoDisplay({
                     </div>
                   )
                 ) : (
-                   // estimations is null, undefined, or an empty array
                    <div className="text-center text-muted-foreground p-3">
                       <ShoppingCart size={24} className="mx-auto mb-1"/>
                       <p>No valuation data was returned from the marketplaces for this card.</p>

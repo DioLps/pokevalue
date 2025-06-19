@@ -4,7 +4,8 @@
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DollarSign, Info, ShoppingCart } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { DollarSign, Info, ShoppingCart, ExternalLink } from 'lucide-react';
 
 interface CardInfoDisplayProps {
   imageDataUri: string | null;
@@ -28,6 +29,16 @@ export function CardInfoDisplay({
   if (!isLoadingIdentification && !isLoadingValuation && !cardName && !imageDataUri) {
     return null; // Nothing to display yet
   }
+
+  const getMarketplaceSearchUrl = () => {
+    if (!cardName || !marketplace) return '#';
+    const searchTerm = encodeURIComponent(`${cardName} Pokemon card`);
+    if (marketplace.toLowerCase() === 'ebay') {
+      return `https://www.ebay.com/sch/i.html?_nkw=${searchTerm}`;
+    }
+    // Generic Google search for other marketplaces
+    return `https://www.google.com/search?q=${searchTerm}+${encodeURIComponent(marketplace)}`;
+  };
 
   return (
     <Card className="w-full shadow-lg mt-6">
@@ -73,7 +84,7 @@ export function CardInfoDisplay({
                 )}
               </div>
 
-              {(isLoadingValuation || estimatedValue) && (
+              {(isLoadingValuation || (estimatedValue && marketplace)) && (
                 <div className="pt-4 border-t">
                   <h4 className="text-md font-semibold mb-2 flex items-center">
                     <DollarSign size={20} className="mr-2 text-accent" /> Estimated Value
@@ -82,11 +93,23 @@ export function CardInfoDisplay({
                     <div className="space-y-2">
                       <Skeleton className="h-6 w-1/2" />
                       <Skeleton className="h-4 w-1/3" />
+                       <Skeleton className="h-10 w-3/4 mt-2" />
                     </div>
                   ) : (
                     <>
                       <p className="text-2xl font-bold text-primary">{estimatedValue}</p>
                       {marketplace && <p className="text-xs text-muted-foreground">Source: {marketplace}</p>}
+                      {marketplace && cardName && estimatedValue && (
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          className="mt-2"
+                          onClick={() => window.open(getMarketplaceSearchUrl(), '_blank')}
+                        >
+                          See on {marketplace}
+                          <ExternalLink size={16} className="ml-2" />
+                        </Button>
+                      )}
                     </>
                   )}
                 </div>
@@ -94,7 +117,7 @@ export function CardInfoDisplay({
             </div>
           </div>
         )}
-         {!isLoadingIdentification && !isLoadingValuation && cardName && !estimatedValue && (
+         {!isLoadingIdentification && !isLoadingValuation && cardName && !(estimatedValue && marketplace) && (
           <div className="text-center text-muted-foreground p-4">
             <ShoppingCart size={32} className="mx-auto mb-2"/>
             <p>Card identified. Value estimation might have failed or is not available.</p>

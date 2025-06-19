@@ -28,9 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Next/font handles font loading, direct links not needed if using next/font */}
+        {/* next/font handles font loading, direct links are generally not needed */}
       </head>
       <body className={cn("font-body antialiased", inter.variable, poppins.variable)}>
         {children}

@@ -82,6 +82,8 @@ export default function HomePage() {
         return;
       }
 
+      toast({ title: "Success!", description: "Card identified and value estimation process complete.", variant: "default" });
+
       setView("displayingResults");
       setSubmissionData(response);
     } catch (error) {
@@ -111,10 +113,9 @@ export default function HomePage() {
   };
 
   const pageContainerClasses =
-    `min-h-screen flex flex-col items-center p-4 sm:p-6 md:p-8 bg-gradient-to-br from-background to-blue-100 dark:from-background dark:to-slate-900 ${
-      view === "upload"
-        ? "justify-center"
-        : "justify-start pt-12 sm:pt-16 md:pt-20"
+    `min-h-screen flex flex-col items-center p-4 sm:p-6 md:p-8 bg-gradient-to-br from-background to-blue-100 dark:from-background dark:to-slate-900 ${view === "upload"
+      ? "justify-center"
+      : "justify-start pt-12 sm:pt-16 md:pt-20"
     }`;
 
   return (

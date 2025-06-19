@@ -21,7 +21,7 @@ export type EstimateCardValueInput = z.infer<typeof EstimateCardValueInputSchema
 const SingleMarketplaceEstimationSchema = z.object({
   marketplace: z.string().describe('The name of the marketplace (e.g., eBay, PriceCharting).'),
   estimatedValue: z.string().describe('The estimated market value of the Pokemon card on this marketplace. State "Not found" or "N/A" if no listing is available or value cannot be determined.'),
-  searchUrl: z.string().url().describe('The direct URL used for searching on the marketplace for the given card name and serial number.'),
+  searchUrl: z.string().describe('The direct URL used for searching on the marketplace for the given card name and serial number.'),
 });
 
 const EstimateCardValueOutputSchema = z.array(SingleMarketplaceEstimationSchema).describe('An array of value estimations from different marketplaces (eBay and PriceCharting).');

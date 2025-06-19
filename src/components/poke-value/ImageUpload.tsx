@@ -92,7 +92,7 @@ export function ImageUpload({ onFileSelected, onScanClicked, isLoading, imagePre
               alt="Pokemon card preview"
               width={200}
               height={280}
-              className="rounded-md object-contain max-h-full w-auto"
+              className="rounded-md object-contain max-h-full w-auto mx-auto"
               data-ai-hint="pokemon card"
             />
           </div>
